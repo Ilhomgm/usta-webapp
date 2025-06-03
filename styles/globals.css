@@ -2,25 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  padding: 0;
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-  background: #f9fafb;
-  color: #111827;
-  scroll-behavior: smooth;
+/* 🌟 Кастомные глобальные стили */
+body {
+  @apply bg-white text-gray-900 antialiased;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+h1, h2, h3 {
+  @apply font-semibold text-gray-800;
 }
 
 button {
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-}
-
-* {
-  box-sizing: border-box;
+  @apply rounded-lg px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 transition;
 }
