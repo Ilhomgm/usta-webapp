@@ -1,30 +1,29 @@
 'use client'
 
-import Image from 'next/image'
-import { Button } from '@/components/ui/button'
+import Head from 'next/head'
 import Link from 'next/link'
+import { Button } from '@/components/ui/button'
 
 export default function HomePage() {
   return (
-    <section className="text-center py-20">
-      <h1 className="text-5xl font-bold mb-6 text-blue-600">Добро пожаловать в USTA</h1>
-      <p className="text-xl mb-8 text-gray-700">Умная платформа для поиска мастеров и сервисов в вашем городе</p>
-      <div className="flex justify-center gap-4">
-        <Link href="/masters">
-          <Button className="px-6 py-3 text-lg">Категории мастеров</Button>
-        </Link>
-        <Link href="/services">
-          <Button variant="outline" className="px-6 py-3 text-lg">Сервисы</Button>
-        </Link>
-      </div>
-      <div className="mt-16">
-        <Image
-          src="/illustration.png"
-          alt="USTA иллюстрация"
-          width={500}
-          height={300}
-        />
-      </div>
-    </section>
+    <>
+      <Head>
+        <title>USTA — Найди своего мастера</title>
+      </Head>
+      <main className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex flex-col items-center justify-center p-6 text-center">
+        <h1 className="text-5xl font-bold mb-4">USTA</h1>
+        <p className="text-xl text-gray-600 mb-6">
+          Умный помощник по поиску мастеров, услуг и специалистов.
+        </p>
+        <div className="flex space-x-4">
+          <Link href="/masters">
+            <Button>🔧 Мастера</Button>
+          </Link>
+          <Link href="/admin">
+            <Button variant="outline">🛠 Админ-панель</Button>
+          </Link>
+        </div>
+      </main>
+    </>
   )
 }
