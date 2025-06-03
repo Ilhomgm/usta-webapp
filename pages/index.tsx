@@ -2,38 +2,67 @@ import Head from 'next/head'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import Link from 'next/link'
+import { MapPin, Search, Star } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 export default function Home() {
   return (
     <>
       <Head>
-        <title>USTA SuperApp</title>
-        <meta name="description" content="Универсальный сервис мастеров и услуг по всему Узбекистану и миру" />
+        <title>USTA SuperApp — Услуги рядом</title>
       </Head>
+      <main className="min-h-screen bg-gray-50 px-6 py-10">
+        <motion.h1
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          className="text-4xl font-bold text-center text-black mb-6"
+        >
+          Добро пожаловать в USTA SuperApp
+        </motion.h1>
 
-      <main className="min-h-screen bg-gradient-to-tr from-gray-50 via-white to-gray-100 p-6">
-        <div className="max-w-4xl mx-auto text-center mb-12">
-          <h1 className="text-4xl font-bold tracking-tight mb-2">USTA SuperApp</h1>
-          <p className="text-gray-600 text-lg">Найди лучших мастеров, закажи услуги, продай или купи — всё в одном месте.</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3, duration: 0.6 }}
+          className="flex flex-col items-center gap-4 mb-10"
+        >
+          <Link href="/masters">
+            <Button className="text-lg px-8 py-4 flex items-center gap-2 shadow-xl">
+              <Search size={20} /> Найти мастера
+            </Button>
+          </Link>
+          <Link href="/map">
+            <Button variant="outline" className="text-lg px-8 py-4 flex items-center gap-2">
+              <MapPin size={20} /> Смотреть по карте
+            </Button>
+          </Link>
+        </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {[
-            { title: 'Мастера', description: 'Электрики, сантехники, строители и др.', href: '/masters' },
-            { title: 'Услуги', description: 'Бытовые, авто, IT, клининг и многое другое.', href: '/services' },
-            { title: 'Продажа', description: 'Покупай и продавай технику, инструменты и всё нужное.', href: '/market' },
-          ].map((item, index) => (
-            <Card key={index} className="hover:shadow-xl transition duration-200">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-semibold mb-2">{item.title}</h2>
-                <p className="text-sm text-gray-500 mb-4">{item.description}</p>
-                <Link href={item.href}>
-                  <Button className="w-full">Перейти</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.7 }}
+        >
+          <h2 className="text-2xl font-semibold text-center mb-6">🔥 Популярные категории</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {['Электрик', 'Сантехник', 'Клининг', 'Автомеханик', 'Кондиционерщик', 'Мебельщик'].map(
+              (category, index) => (
+                <Card key={index} className="hover:shadow-md transition-all">
+                  <CardContent className="p-4">
+                    <div className="text-lg font-medium flex items-center gap-2">
+                      <Star size={16} className="text-yellow-500" />
+                      {category}
+                    </div>
+                    <Button variant="ghost" className="mt-2 w-full">
+                      Открыть
+                    </Button>
+                  </CardContent>
+                </Card>
+              )
+            )}
+          </div>
+        </motion.section>
       </main>
     </>
   )
