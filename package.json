@@ -23,5 +23,6 @@
     "eslint": "8.56.0",
     "eslint-config-next": "13.4.19",
     "typescript": "^5.2.2"
+    npm install @googlemaps/js-api-loader
   }
 }
