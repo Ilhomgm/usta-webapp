@@ -18,11 +18,11 @@
     "postcss": "^8.4.21",
     "lucide-react": "^0.263.0",
     "classnames": "^2.3.2"
+    "@googlemaps/js-api-loader": "^1.16.4",
   },
   "devDependencies": {
     "eslint": "8.56.0",
     "eslint-config-next": "13.4.19",
     "typescript": "^5.2.2"
-    npm install @googlemaps/js-api-loader
   }
 }
