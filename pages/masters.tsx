@@ -12,7 +12,8 @@ export default function MastersPage() {
         <h1 className="text-3xl font-bold mb-4 text-center">Категории мастеров</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {[
-            'Электрик', 'Сантехник', 'Строитель', 'Клининг', 'Маляр', 'Автомеханик', 'Кондиционерщик', 'Мебельщик', 'Сварщик'
+            'Электрик', 'Сантехник', 'Строитель', 'Клининг', 'Маляр',
+            'Автомеханик', 'Кондиционерщик', 'Мебельщик', 'Сварщик'
           ].map((category, i) => (
             <Card key={i} className="hover:shadow-md">
               <CardContent className="p-4">
