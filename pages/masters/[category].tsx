@@ -1,29 +1,49 @@
-import { useRouter } from 'next/router'
 import Head from 'next/head'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 
-export default function CategoryPage() {
-  const router = useRouter()
-  const { category } = router.query
+const categories = [
+  'Электрик',
+  'Сантехник',
+  'Автомеханик',
+  'Клининг',
+  'Сварщик',
+  'Мебельщик',
+  'Маляр',
+  'Кондиционерщик',
+  'Строитель',
+]
 
+export default function HomePage() {
   return (
     <>
       <Head>
-        <title>{category} - Мастера USTA</title>
+        <title>USTA Super App</title>
       </Head>
-      <main className="min-h-screen p-6 bg-white">
-        <h1 className="text-3xl font-bold mb-6 text-center">Мастера категории: {category}</h1>
+      <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 p-6">
+        <motion.h1
+          className="text-4xl font-bold text-center mb-10"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          Добро пожаловать в USTA — Сервис мастеров
+        </motion.h1>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="hover:shadow-md">
-              <CardContent className="p-4">
-                <h2 className="text-lg font-semibold mb-2">Мастер #{i}</h2>
-                <p className="text-sm text-gray-600 mb-2">Описание мастера</p>
-                <Button className="w-full">Связаться</Button>
-              </CardContent>
-            </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {categories.map((category, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+            >
+              <Link href={`/masters/${category}`}>
+                <Button className="w-full py-6 text-lg font-medium shadow hover:scale-105 transition-all">
+                  {category}
+                </Button>
+              </Link>
+            </motion.div>
           ))}
         </div>
       </main>
