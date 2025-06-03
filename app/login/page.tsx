@@ -1,39 +1,42 @@
 'use client'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 export default function LoginPage() {
-  const [password, setPassword] = useState('')
   const router = useRouter()
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (password === 'USTA-KOROL-999X') {
-      // ✅ Ставим куку
-      document.cookie = 'usta-auth=USTA-KOROL-999X; path=/'
+  const handleLogin = async () => {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    })
 
-      // 🔁 Переход в админку
-      router.push('/admin')
+    if (res.ok) {
+      router.push('/dashboard')
     } else {
-      alert('Неверный пароль')
+      setError('Неверный пароль!')
     }
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-white">
-      <form onSubmit={handleLogin} className="p-6 border rounded-lg shadow w-full max-w-sm">
-        <h1 className="text-xl font-bold mb-4 text-center">Вход в панель администратора</h1>
-        <input
+    <main className="min-h-screen flex flex-col items-center justify-center p-6">
+      <h1 className="text-3xl font-bold mb-6">Вход в систему</h1>
+      <div className="w-full max-w-sm space-y-4">
+        <Input
           type="password"
+          placeholder="Введите пароль"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Введите пароль"
-          className="w-full px-4 py-2 border mb-4 rounded"
         />
-        <button type="submit" className="w-full bg-black text-white py-2 rounded hover:bg-gray-800">
-          Войти
-        </button>
-      </form>
+        <Button className="w-full" onClick={handleLogin}>Войти</Button>
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+      </div>
     </main>
   )
 }
