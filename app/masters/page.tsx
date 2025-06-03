@@ -1,43 +1,37 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import Link from 'next/link'
+import fs from 'fs'
+import path from 'path'
 import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 
-export default function MastersPage() {
-  const categories = [
-    { name: 'Электрик', icon: '/illustration.png' },
-    { name: 'Сантехник', icon: '/illustration.png' },
-    { name: 'Строитель', icon: '/illustration.png' },
-    { name: 'Клининг', icon: '/illustration.png' },
-    { name: 'Маляр', icon: '/illustration.png' },
-    { name: 'Автомеханик', icon: '/illustration.png' },
-    { name: 'Кондиционерщик', icon: '/illustration.png' },
-    { name: 'Мебельщик', icon: '/illustration.png' },
-    { name: 'Сварщик', icon: '/illustration.png' }
-  ]
+type Master = {
+  id: number
+  name: string
+  category: string
+  phone: string
+}
+
+export default function MastersListPage() {
+  const mastersFile = path.join(process.cwd(), 'data', 'masters.json')
+  let masters: Master[] = []
+
+  if (fs.existsSync(mastersFile)) {
+    const fileContent = fs.readFileSync(mastersFile, 'utf-8')
+    masters = JSON.parse(fileContent)
+  }
 
   return (
-    <>
-      <Head>
-        <title>Категории мастеров – USTA</title>
-      </Head>
-      <main className="min-h-screen px-6 py-8 bg-gray-50">
-        <h1 className="text-4xl font-bold text-center mb-8">Категории мастеров</h1>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {categories.map((cat, idx) => (
-            <Card key={idx} className="hover:shadow-lg transition">
-              <CardContent className="p-4 text-center">
-                <Image src={cat.icon} width={100} height={100} alt={cat.name} className="mx-auto mb-3" />
-                <h2 className="text-lg font-semibold mb-2">{cat.name}</h2>
-                <Link href={`/masters/${cat.name.toLowerCase()}`}>
-                  <Button className="w-full">Найти</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </main>
-    </>
+    <main className="min-h-screen p-8 bg-gray-100">
+      <h1 className="text-3xl font-bold text-center mb-6">Список всех мастеров</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {masters.map((master) => (
+          <Card key={master.id}>
+            <CardContent className="p-4">
+              <h2 className="text-xl font-semibold mb-2">{master.name}</h2>
+              <p>Категория: {master.category}</p>
+              <p>Телефон: {master.phone}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </main>
   )
 }
