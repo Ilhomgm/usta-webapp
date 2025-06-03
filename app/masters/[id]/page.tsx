@@ -63,6 +63,9 @@ export default function MasterProfilePage() {
             </div>
           </div>
         </div>
+     import ReviewsSection from '@/components/master/ReviewsSection'
+...
+<ReviewsSection />
       </main>
     </>
   )
