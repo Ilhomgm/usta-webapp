@@ -3,19 +3,15 @@ import classNames from "classnames";
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  className?: string;
 }
 
-export const Card = ({ children, className, ...props }: CardProps) => {
+export function Card({ children, className, ...props }: CardProps) {
   return (
     <div
-      className={classNames(
-        "rounded-2xl shadow-md p-4 bg-white dark:bg-gray-800",
-        className
-      )}
+      className={classNames("rounded-2xl border p-4 shadow-sm bg-white", className)}
       {...props}
     >
       {children}
     </div>
   );
-};
+}
