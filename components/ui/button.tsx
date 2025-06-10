@@ -1,21 +1,24 @@
-import React from "react";
-import classNames from "classnames";
+"use client"
+import { ButtonHTMLAttributes, forwardRef } from "react"
+import { cn } from "@/lib/utils"
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary";
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "default" | "outline"
 }
 
-export function Button({ className, variant = "primary", ...props }: ButtonProps) {
-  const baseStyle = "rounded-md px-4 py-2 font-semibold focus:outline-none focus:ring-2";
-  const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
-    secondary: "bg-gray-200 text-black hover:bg-gray-300 focus:ring-gray-400",
-  };
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant = "default", ...props }, ref) => {
+    return (
+      <button
+        ref={ref}
+        className={cn(
+          "px-4 py-2 rounded text-white bg-blue-600 hover:bg-blue-700",
+          className
+        )}
+        {...props}
+      />
+    )
+  }
+)
 
-  return (
-    <button
-      className={classNames(baseStyle, variants[variant], className)}
-      {...props}
-    />
-  );
-}
+Button.displayName = "Button"
