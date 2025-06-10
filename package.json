@@ -18,7 +18,8 @@
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.21",
     "lucide-react": "^0.263.0",
-    "classnames": "^2.3.2"
+    "classnames": "^2.3.2",
+    "@googlemaps/js-api-loader": "^1.16.6"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
