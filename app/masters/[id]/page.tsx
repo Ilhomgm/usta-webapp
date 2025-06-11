@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { StarIcon, PhoneCallIcon } from 'lucide-react'
+import ReviewsSection from '@/components/master/ReviewsSection' // ✅ импорт
 
 const mockMaster = {
   name: 'Алишер Ахмедов',
@@ -62,10 +63,10 @@ export default function MasterProfilePage() {
               ))}
             </div>
           </div>
+
+          {/* 👇 Добавлен блок отзывов */}
+          <ReviewsSection />
         </div>
-     import ReviewsSection from '@/components/master/ReviewsSection'
-...
-<ReviewsSection />
       </main>
     </>
   )
