@@ -36,3 +36,6 @@ export function CardFooter({ children, className = '' }: CardProps) {
     </div>
   )
 }
+
+// ✅ Не забудь добавить этот экспорт
+export { Card, CardHeader, CardContent, CardFooter }
