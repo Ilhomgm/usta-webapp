@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+export const config = {
+  matcher: ['/dashboard/:path*', '/masters/:path*'],
+}
+
 export function middleware(request: NextRequest) {
-  const isLoggedIn = request.cookies.get('auth')?.value === 'true'
-  const privatePaths = ['/dashboard', '/masters']
+  const auth = request.cookies.get('auth')?.value
+  const isLoggedIn = auth === 'true'
 
-  const isPrivate = privatePaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  )
-
-  if (isPrivate && !isLoggedIn) {
+  if (!isLoggedIn) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
