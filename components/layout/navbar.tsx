@@ -24,7 +24,7 @@ export function Navbar() {
         {navItems.map(({ href, label }) => (
           <Link key={href} href={href}>
             <Button
-              variant={pathname === href ? "default" : "ghost"}
+              variant={pathname === href ? "default" : "outline"} // Заменено "ghost" → "outline"
               className={cn("text-sm")}
             >
               {label}
