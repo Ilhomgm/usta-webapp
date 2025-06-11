@@ -34,8 +34,8 @@ export default function ChatPage() {
   const sendMessage = () => {
     if (newMessage.trim() === '') return
     const now = new Date()
-    const time = `${now.getHours()}:${now.getMinutes()}`
-    const message = {
+    const time = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`
+    const message: Message = {
       id: Date.now(),
       sender: 'client',
       text: newMessage,
