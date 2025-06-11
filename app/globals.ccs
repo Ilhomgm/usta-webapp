@@ -3,4 +3,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Добавь сюда свои кастомные стили */
+/* Дополнительно можно добавить свои стили */
+body {
+  @apply bg-white text-black dark:bg-gray-900 dark:text-white;
+  font-family: 'Inter', sans-serif;
+}
