@@ -1,28 +1,38 @@
-// components/ui/card.tsx
+import { ReactNode } from 'react'
 
-import React from 'react'
-import { cn } from '@/lib/utils' // если нет, убери cn или замени на className напрямую
+type CardProps = {
+  children: ReactNode
+  className?: string
+}
 
-export function Card({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function Card({ children, className = '' }: CardProps) {
   return (
-    <div className={cn("rounded-lg border bg-white text-black shadow-sm", className)} {...props} />
+    <div className={`rounded-2xl shadow bg-white dark:bg-zinc-800 ${className}`}>
+      {children}
+    </div>
   )
 }
 
-export function CardHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function CardHeader({ children, className = '' }: CardProps) {
   return (
-    <div className={cn("border-b p-4", className)} {...props} />
+    <div className={`px-4 py-3 border-b border-gray-200 dark:border-zinc-700 ${className}`}>
+      {children}
+    </div>
   )
 }
 
-export function CardContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function CardContent({ children, className = '' }: CardProps) {
   return (
-    <div className={cn("p-4", className)} {...props} />
+    <div className={`px-4 py-2 ${className}`}>
+      {children}
+    </div>
   )
 }
 
-export function CardFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function CardFooter({ children, className = '' }: CardProps) {
   return (
-    <div className={cn("border-t p-4", className)} {...props} />
+    <div className={`px-4 py-3 border-t border-gray-200 dark:border-zinc-700 ${className}`}>
+      {children}
+    </div>
   )
 }
