@@ -16,8 +16,12 @@ export default function HomePage() {
           Умный помощник по поиску мастеров, услуг и специалистов.
         </p>
         <div className="flex space-x-4">
-          <Link href="/masters"><Button>🔧 Мастера</Button></Link>
-          <Link href="/admin"><Button variant="outline">🛠 Админ-панель</Button></Link>
+          <Link href="/masters">
+            <Button>🔧 Мастера</Button>
+          </Link>
+          <Link href="/admin">
+            <Button variant="outline">🛠 Админ-панель</Button>
+          </Link>
         </div>
       </main>
     </>
