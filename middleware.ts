@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/masters/:path*'],
+  matcher: ['/dashboard/:path*', '/masters/:path*']
 }
 
 export function middleware(request: NextRequest) {
@@ -9,7 +9,7 @@ export function middleware(request: NextRequest) {
   const isLoggedIn = auth === 'true'
 
   if (!isLoggedIn) {
-    return NextResponse.redirect(new URL('/login', request.url))
+    return NextResponse.redirect('/login')
   }
 
   return NextResponse.next()
