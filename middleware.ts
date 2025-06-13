@@ -4,7 +4,7 @@ export function middleware(request: NextRequest) {
   const isLoggedIn = request.cookies.get('auth')?.value === 'true'
   const privatePaths = ['/dashboard', '/masters']
 
-  const isPrivate = privatePaths.some(path =>
+  const isPrivate = privatePaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   )
 
@@ -13,8 +13,4 @@ export function middleware(request: NextRequest) {
   }
 
   return NextResponse.next()
-}
-
-export const config = {
-  matcher: ['/dashboard/:path*', '/masters/:path*'],
 }
