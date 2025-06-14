@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "bot": "node bot.js"
   },
   "dependencies": {
     "next": "13.4.19",
@@ -19,13 +20,14 @@
     "lucide-react": "^0.263.0",
     "classnames": "^2.3.2",
     "@googlemaps/js-api-loader": "^1.16.6",
-    "recharts": "^2.9.0"
+    "recharts": "^2.9.0",
+    "telegraf": "^4.16.2"
   },
   "devDependencies": {
     "eslint": "^8.56.0",
     "eslint-config-next": "13.4.19",
     "typescript": "^5.2.2",
     "@types/node": "^18.17.15",
-    "@types/react": "^18.2.14"
+    "@types-react": "^18.2.14"
   }
 }
