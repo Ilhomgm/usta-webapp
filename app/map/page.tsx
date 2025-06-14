@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-// ✅ ДОБАВЬ ЭТО ПЕРЕД export default
+// ⬇️ Вот эта часть обязательно
 declare global {
   interface Window {
     Telegram?: {
@@ -24,7 +24,7 @@ export default function MapPage() {
 
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
-      🗺️ Карта будет здесь (map/page.tsx)
+      🗺️ Загрузка карты...
     </div>
   );
 }
