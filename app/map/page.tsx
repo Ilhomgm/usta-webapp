@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-// 👇 ЭТО ОБЯЗАТЕЛЬНО — объявляем типы Telegram для TypeScript
+// ✅ Объявляем интерфейс для window.Telegram — ОБЯЗАТЕЛЬНО!
 declare global {
   interface Window {
     Telegram?: {
@@ -19,15 +19,15 @@ export default function MapPage() {
     if (typeof window !== "undefined" && window.Telegram?.WebApp) {
       window.Telegram.WebApp.expand();
       window.Telegram.WebApp.ready();
-      console.log("✅ Telegram WebApp активирован");
+      console.log("✅ Telegram WebApp готов");
     } else {
       console.log("❌ Telegram WebApp не найден");
     }
   }, []);
 
   return (
-    <div style={{ textAlign: "center", paddingTop: "50px" }}>
-      🗺️ Здесь будет карта мастеров
+    <div style={{ padding: "50px", textAlign: "center", fontSize: "18px" }}>
+      🗺️ Это страница карты мастеров (MapPage)
     </div>
   );
 }
