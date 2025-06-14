@@ -1,9 +1,4 @@
 import '@/app/globals.css'
-import { Inter } from 'next/font/google'
-import { ThemeProvider } from '@/components/theme-provider'
-import Navbar from '@/components/navbar'
-
-const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
   title: 'USTA WebApp',
@@ -13,13 +8,11 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru">
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <Navbar />
-          <main className="container mx-auto p-4">
-            {children}
-          </main>
-        </ThemeProvider>
+      <head>
+        <script src="https://telegram.org/js/telegram-web-app.js"></script>
+      </head>
+      <body style={{ margin: 0, padding: 0, fontFamily: 'Arial, sans-serif' }}>
+        {children}
       </body>
     </html>
   )
