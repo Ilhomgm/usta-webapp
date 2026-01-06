@@ -28,6 +28,6 @@
     "eslint-config-next": "13.4.19",
     "typescript": "^5.2.2",
     "@types/node": "^18.17.15",
-    "@types-react": "^18.2.14"
+    "@types/react": "^18.2.14"
   }
 }
