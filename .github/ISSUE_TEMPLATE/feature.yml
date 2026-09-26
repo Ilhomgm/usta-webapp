@@ -1,0 +1,20 @@
+name: Задача продукта
+description: Реализация функции USTA
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Пользователь и ожидаемый результат
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Критерии приёмки
+      description: Включите ошибки, права доступа и проверяемый результат.
+    validations:
+      required: true
+  - type: input
+    id: phase
+    attributes:
+      label: Этап дорожной карты

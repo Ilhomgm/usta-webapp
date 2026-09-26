@@ -18,7 +18,8 @@ export default function LoginPage() {
     })
 
     if (res.ok) {
-      router.push('/dashboard')
+      router.push('/admin/dashboard')
+      router.refresh()
     } else {
       setError('Неверный пароль!')
     }
@@ -40,3 +41,4 @@ export default function LoginPage() {
     </main>
   )
 }
+
