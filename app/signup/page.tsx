@@ -24,9 +24,7 @@ export default function SignupPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('📦 Отправка формы:', formData)
-    alert('Регистрация прошла успешно!')
-    router.push('/')
+    alert('Это демонстрационная форма. Регистрация ещё не подключена; данные не сохранены.')
   }
 
   return (
@@ -74,3 +72,4 @@ export default function SignupPage() {
     </>
   )
 }
+

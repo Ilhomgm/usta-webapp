@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import Head from 'next/head'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -54,7 +55,9 @@ export default function MasterProfilePage() {
             <h2 className="text-xl font-semibold mb-4">Галерея работ</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {mockMaster.gallery.map((img, i) => (
-                <img
+                <Image
+                  width={480}
+                  height={320}
                   key={i}
                   src={img}
                   alt="Работа мастера"
@@ -71,3 +74,4 @@ export default function MasterProfilePage() {
     </>
   )
 }
+

@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+*.session
+*.session-*
+*.log
+__pycache__/
+*.py[cod]
+.venv/
+.pip-tmp/
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+.DS_Store
