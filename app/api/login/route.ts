@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { configured, passwordMatches, createSession, COOKIE_NAME, SESSION_TTL } from '@/lib/admin-session.mjs'
+import { originAllowed, secureCookie } from '@/lib/request-security.mjs'
 
 export const runtime = 'nodejs'
 // Single-instance safeguard; production needs shared rate limiting at the gateway.
@@ -9,7 +10,7 @@ let windowStart = Date.now()
 
 export async function POST(request: NextRequest) {
   if (!configured()) return NextResponse.json({ error: 'Admin access is not configured' }, { status: 503 })
-  if (request.headers.get('origin') !== request.nextUrl.origin)
+  if (!originAllowed(request.headers.get('origin'),request.nextUrl.origin,process.env.USTA_PUBLIC_ORIGIN))
     return NextResponse.json({ error: 'Invalid origin' }, { status: 403 })
   if (Date.now() - windowStart > 60000) { attempts = 0; windowStart = Date.now() }
   if (++attempts > 20)
@@ -26,9 +27,8 @@ export async function POST(request: NextRequest) {
   const response = NextResponse.json({ success: true })
   response.headers.set('Cache-Control', 'no-store')
   response.cookies.set(COOKIE_NAME, createSession(), {
-    path: '/', httpOnly: true, secure: process.env.NODE_ENV === 'production',
+    path: '/', httpOnly: true, secure: secureCookie(request.nextUrl.origin),
     sameSite: 'strict', maxAge: SESSION_TTL,
   })
   return response
 }
-

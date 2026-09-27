@@ -14,3 +14,7 @@ out/
 coverage/
 *.tsbuildinfo
 .DS_Store
+data/*.sqlite*
+backups/
+ADMIN-ACCESS.local.txt
+usta-server.pid

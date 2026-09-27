@@ -1,18 +1,102 @@
 'use client'
 
-import { useEffect } from 'react'
+import Link from 'next/link'
+import { FormEvent, useCallback, useEffect, useState } from 'react'
+import { ArrowUpRight, CheckCircle, Clock, MapPin, Plus, Search, Send, Shield, Star, Wrench } from 'lucide-react'
+import NearbyMap from '@/components/nearby-map'
+import LocationPicker from '@/components/location-picker'
+import AIAssistant, {type AIDraft} from '@/components/ai-assistant'
+import PriceInsight, {ServiceFields} from '@/components/price-insight'
+
+type User = {id:string;name:string;email:string;role:'client'|'pro';city:string;specialty:string;bio:string;location?:{latitude:number;longitude:number}|null;mapVisible?:boolean}
+type Order = {service_code?:string;quantity?:number;price_basis?:string;id:string;client_id:string|null;pro_id:string|null;title:string;description:string;category:string;city:string;address:string|null;budget:number;agreed_price:number|null;status:string;created_at:string;offers:{id:string;pro_id:string;pro_name:string;price:number;note:string}[];messages:{id:string;user_id:string;name:string;body:string;created_at:string}[];events:{action:string;created_at:string}[];review:{rating:number;body:string}|null}
+type State = {user:User|null;orders?:Order[];professionals?:{id:string;name:string;city:string;specialty:string;bio:string;rating:number|null;review_count:number}[]}
+const categories=['Сантехника','Электрика','Ремонт','Уборка','Техника','Другие услуги']
+const statusNames:Record<string,string>={open:'Принимает предложения',assigned:'Мастер выбран',in_progress:'В работе',awaiting_confirmation:'Ожидает подтверждения',completed:'Выполнен',cancelled:'Отменён'}
+const price=(value:number)=>new Intl.NumberFormat('ru-RU').format(value)+' сум'
+const date=(value:string)=>new Date(value).toLocaleString('ru-RU',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})
+const reviewCount=(count:number)=>`${count} ${{one:'отзыв',few:'отзыва',many:'отзывов',other:'отзыва'}[new Intl.PluralRules('ru-RU').select(count)]}`
+function values(event:FormEvent<HTMLFormElement>) {event.preventDefault();return Object.fromEntries(new FormData(event.currentTarget).entries())}
 
 export default function HomePage() {
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-      window.Telegram.WebApp.expand()
-      window.Telegram.WebApp.ready()
-    }
-  }, [])
-
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-white">
-      <h1 className="text-3xl font-bold">Добро пожаловать в USTA WebApp!</h1>
-    </main>
-  )
+  const [state,setState]=useState<State>({user:null})
+  const [loading,setLoading]=useState(true)
+  const [pending,setPending]=useState(false)
+  const [error,setError]=useState('')
+  const [notice,setNotice]=useState('')
+  const [auth,setAuth]=useState<'login'|'register'|null>(null)
+  const [role,setRole]=useState('client')
+  const [tab,setTab]=useState('orders')
+  const [create,setCreate]=useState(false)
+  const [aiDraft,setAIDraft]=useState<AIDraft|null>(null)
+  const [targetMaster,setTargetMaster]=useState<{id:string;name:string;category:string}|null>(null)
+  const [selected,setSelected]=useState<string|null>(null)
+  const [filter,setFilter]=useState('')
+  const [query,setQuery]=useState('')
+  const refresh=useCallback(async()=>{
+    const res=await fetch('/api/platform',{cache:'no-store'})
+    const data=await res.json()
+    if(!res.ok)throw new Error(data.error)
+    setState(data)
+  },[])
+  useEffect(()=>{refresh().catch(e=>setError(e.message)).finally(()=>setLoading(false))},[refresh])
+  useEffect(()=>{const view=new URLSearchParams(window.location.search).get('view');if(view==='map'||view==='assistant'||view==='prices')setTab(view)},[])
+  useEffect(()=>{if(!create){setTargetMaster(null);setAIDraft(null)}},[create])
+  useEffect(()=>{if(!notice)return;const timer=setTimeout(()=>setNotice(''),6000);return()=>clearTimeout(timer)},[notice])
+  useEffect(()=>{
+    if(!state.user)return
+    const timer=setInterval(()=>{refresh().catch(()=>{})},12000)
+    return()=>clearInterval(timer)
+  },[state.user,refresh])
+  async function act(action:string,data:Record<string,unknown>={},success='Изменения сохранены') {
+    setPending(true);setError('');setNotice('')
+    try {
+      const res=await fetch('/api/platform',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...data})})
+      const result=await res.json()
+      if(!res.ok)throw new Error(result.error)
+      await refresh();setNotice(success)
+      if(action==='login'||action==='register')setAuth(null)
+      if(action==='logout'){setSelected(null);setTab('orders');setNotice('')}
+      return true
+    }catch(e){setError(e instanceof Error?e.message:'Нет соединения с сервером');return false}
+    finally{setPending(false)}
+  }
+  const user=state.user
+  const orders=state.orders||[]
+  const current=orders.find(o=>o.id===selected)
+  const visible=orders.filter(o=>(!filter||o.category===filter)&&`${o.title} ${o.description}`.toLowerCase().includes(query.toLowerCase()))
+  const own=orders.filter(o=>o.client_id===user?.id||o.pro_id===user?.id)
+  return <div className="usta-app">
+    <header className="usta-header"><Link className="usta-logo" href="/">usta<span>●</span></Link><span className="usta-tagline">Люди, на которых можно положиться</span><div className="usta-header-right"><span className="usta-location"><MapPin size={15}/>{user?.city||'Узбекистан'}</span>{user?<><span className="usta-avatar">{user.name.slice(0,1)}</span><button className="usta-text-button" disabled={pending} onClick={()=>act('logout')}>Выйти</button></>:<button className="usta-button small" onClick={()=>setAuth('login')}>Войти <ArrowUpRight size={16}/></button>}</div></header>
+    <div className="usta-feedback" aria-live="polite">{error&&<div className="usta-error" role="alert">{error}<button onClick={()=>setError('')} aria-label="Закрыть ошибку">×</button></div>}{notice&&<div className="usta-notice">{notice}<button onClick={()=>setNotice('')} aria-label="Закрыть уведомление">×</button></div>}</div>
+    {loading?<main className="usta-main"><p role="status">Загружаем USTA…</p></main>:!user?<main>
+      <section className="usta-hero"><div><div className="usta-eyebrow"><span/> СЕРВИС НАЧИНАЕТСЯ С ДОВЕРИЯ</div><h1>Дело найдёт<br/>своего <em>мастера.</em></h1><p>От протекающего крана до большого ремонта.<br/>Опишите задачу, выберите предложение и договоритесь о работе.</p><div className="usta-hero-actions"><button className="usta-button" onClick={()=>{setRole('client');setAuth('register')}}>Найти мастера <ArrowUpRight size={19}/></button><button className="usta-button secondary" onClick={()=>{setRole('pro');setAuth('register')}}>Стать мастером</button></div><div className="usta-hero-note"><Shield size={17}/> Согласованная цена. История заказа. Отзывы по результату.</div></div><div className="usta-illustration"><div className="usta-orbit"/><div className="usta-tool"><Wrench size={110} strokeWidth={1.3}/></div><div className="usta-float top"><CheckCircle size={24}/><div><strong>Всё начинается с задачи</strong><span>Вы описываете — мастер предлагает</span></div></div><div className="usta-float bottom"><div className="usta-mini-avatar">У</div><div><strong>Удобно договориться</strong><span>Цена и переписка в одном месте</span></div><ArrowUpRight size={22}/></div><span className="usta-spark">✳</span></div></section>
+      <section className="usta-services"><div className="usta-section-title"><h2>Помощь рядом</h2><span>Для дома и повседневных дел</span></div><div className="usta-category-grid">{categories.map((c,i)=><button key={c} onClick={()=>{setRole('client');setAuth('register')}}><span className="usta-category-number">0{i+1}</span><strong>{c}</strong><ArrowUpRight size={20}/></button>)}</div></section>
+      <section className="usta-steps">{[['01','Расскажите о задаче','Категория, описание, адрес и ваш бюджет.'],['02','Выберите предложение','Посмотрите стоимость и условия мастера.'],['03','Подтвердите результат','Обсудите детали в чате и оставьте отзыв.']].map(([n,h,p])=><div key={n}><span>{n}</span><h3>{h}</h3><p>{p}</p></div>)}</section>
+    </main>:<main className="usta-main">
+      <div className="usta-dashboard-title"><div className="usta-eyebrow">{user.role==='pro'?'КАБИНЕТ МАСТЕРА':'ЛИЧНЫЙ КАБИНЕТ'}</div><h1>Здравствуйте, {user.name.split(' ')[0]}<span>!</span></h1><p>{user.role==='pro'?'Новые задачи и ваши заказы — в одном месте.':'Хороший мастер — на один шаг ближе.'}</p>{user.role==='client'&&<button className="usta-button" onClick={()=>setCreate(true)}><Plus size={19}/> Создать заказ</button>}</div>
+      <div className="usta-stats"><div><span>Мои заказы</span><strong>{own.length.toString().padStart(2,'0')}</strong></div><div><span>В процессе</span><strong>{own.filter(o=>!['open','completed','cancelled'].includes(o.status)).length.toString().padStart(2,'0')}</strong></div><div><span>Завершено</span><strong>{own.filter(o=>o.status==='completed').length.toString().padStart(2,'0')}</strong></div></div>
+      <nav className="usta-tabs" aria-label="Разделы кабинета">{[['orders',user.role==='pro'?'Лента заказов':'Мои заказы'],['map','Карта рядом'],['assistant','ИИ-помощник'],['prices','Цены'],['masters','Мастера'],['profile','Мой профиль']].map(([id,label])=><button className={tab===id?'active':''} key={id} onClick={()=>setTab(id)}>{label}</button>)}<button className="usta-refresh" onClick={()=>refresh().then(()=>setNotice('Данные обновлены')).catch(e=>setError(e.message))}>Обновить</button></nav>
+      {tab==='assistant'&&<AIAssistant key={user.id} user={user} onDraft={(draft,master)=>{setAIDraft(draft);setTargetMaster(master?{id:master.id,name:master.name,category:master.category}:null);setCreate(true)}}/>}
+      {tab==='prices'&&<PriceInsight city={user.city}/>}
+      {tab==='map'&&<NearbyMap key={user.id} user={user} onSave={data=>act('mapLocation',data,'Настройки карты сохранены')} onProfessional={pro=>{setTargetMaster(pro);setCreate(true)}} onOrder={async id=>{try{await refresh();setSelected(id)}catch(e){setError(e instanceof Error?e.message:'Не удалось открыть заказ')}}}/>}
+      {tab==='orders'&&<><div className="usta-filters"><label className="usta-search"><Search size={18}/><input aria-label="Поиск заказов" placeholder="Поиск по задачам" value={query} onChange={e=>setQuery(e.target.value)}/></label><select aria-label="Фильтр по категории" value={filter} onChange={e=>setFilter(e.target.value)}><option value="">Все категории</option>{categories.map(c=><option key={c}>{c}</option>)}</select></div><div className="usta-order-grid">{visible.map(o=><button className="usta-order-card" key={o.id} onClick={()=>setSelected(o.id)}><div className="usta-card-top"><span className={`usta-status ${o.status}`}>{statusNames[o.status]}</span><span>{o.category}</span></div><h3>{o.title}</h3><p>{o.description}</p><div className="usta-card-location"><MapPin size={14}/>{o.city}<span>·</span>{date(o.created_at)}</div><div className="usta-card-bottom"><strong>{price(o.agreed_price||o.budget)}</strong><span>{o.offers.length?`${o.offers.length} предлож.`:'Подробнее'} <ArrowUpRight size={16}/></span></div></button>)}</div>{!visible.length&&<div className="usta-empty"><Wrench size={34}/><h3>{orders.length?'Ничего не найдено':'Здесь появятся ваши задачи'}</h3><p>{user.role==='client'?'Создайте первый заказ — мастера смогут предложить свои условия.':'Новые заявки из вашего города появятся здесь. Для проверки полного сценария используйте отдельный аккаунт клиента.'}</p>{user.role==='client'&&<button className="usta-button" onClick={()=>setCreate(true)}>Создать первый заказ <Plus size={17}/></button>}</div>}</>}
+      {tab==='masters'&&<div className="usta-order-grid">{state.professionals?.map(p=><article className="usta-pro-card" key={p.id}><div className="usta-pro-avatar">{p.name[0]}</div><h3>{p.name}</h3><p>{p.specialty} · {p.city}</p><div className="usta-rating"><Star size={16}/>{p.rating||'Нет оценок'} <span>({reviewCount(p.review_count)})</span></div>{p.bio&&<p>{p.bio}</p>}</article>)}{!state.professionals?.length&&<div className="usta-empty"><h3>Мастера ещё не зарегистрировались</h3><p>Профили появятся после регистрации исполнителей.</p></div>}</div>}
+      {tab==='profile'&&<form className="usta-profile usta-form" onSubmit={e=>act('profile',values(e))}><h2>Ваш профиль</h2><label>Имя<input name="name" defaultValue={user.name} minLength={2} maxLength={80} required/></label><label>Email<input value={user.email} disabled/></label><label>О себе<textarea name="bio" defaultValue={user.bio} maxLength={1000} placeholder="Расскажите о себе и опыте работы"/></label><p>{user.role==='pro'?`Мастер · ${user.specialty}`:'Клиент'} · {user.city}</p><button className="usta-button" disabled={pending}>Сохранить профиль</button><button type="button" className="usta-text-button" onClick={()=>setTab('map')}>Настроить район на карте</button></form>}
+    </main>}
+    <footer className="usta-footer"><Link className="usta-logo" href="/">usta<span>●</span></Link><span>От задачи — к результату.</span><small>Локальная версия · Оплата напрямую исполнителю</small></footer>
+    {auth&&<div className="usta-backdrop"><section className="usta-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title"><button className="usta-close" onClick={()=>setAuth(null)} aria-label="Закрыть">×</button><div className="usta-eyebrow">ДОБРО ПОЖАЛОВАТЬ В USTA</div><h2 id="auth-title">{auth==='login'?'С возвращением':'Начнём знакомство'}</h2><form className="usta-form" onSubmit={e=>act(auth,{...values(e),role},auth==='login'?'Вы вошли в аккаунт':'Аккаунт создан')}>
+      {auth==='register'&&<><div className="usta-role"><button className={role==='client'?'active':''} type="button" onClick={()=>setRole('client')}>Я клиент</button><button className={role==='pro'?'active':''} type="button" onClick={()=>setRole('pro')}>Я мастер</button></div><label>Ваше имя<input name="name" autoComplete="name" minLength={2} maxLength={80} required/></label><label>Город<input name="city" defaultValue="Ташкент" minLength={2} maxLength={80} required/></label>{role==='pro'&&<label>Специализация<select name="specialty">{categories.map(c=><option key={c}>{c}</option>)}</select></label>}</>}
+      <label>Email<input name="email" type="email" autoComplete="email" maxLength={254} required/></label><label>Пароль<input name="password" type="password" autoComplete={auth==='login'?'current-password':'new-password'} minLength={10} maxLength={128} required placeholder="Не менее 10 символов"/></label><button disabled={pending} className="usta-button">{pending?'Подождите…':auth==='login'?'Войти':'Создать аккаунт'} <ArrowUpRight size={17}/></button><button type="button" className="usta-text-button" onClick={()=>{setAuth(auth==='login'?'register':'login');setError('')}}>{auth==='login'?'Нет аккаунта? Зарегистрироваться':'Уже есть аккаунт? Войти'}</button></form></section></div>}
+    {create&&user&&<div className="usta-backdrop"><section className="usta-modal" role="dialog" aria-modal="true" aria-labelledby="create-title"><button className="usta-close" onClick={()=>setCreate(false)} aria-label="Закрыть">×</button><div className="usta-eyebrow">НОВАЯ ЗАДАЧА</div><h2 id="create-title">Что нужно сделать?</h2><form className="usta-form" onSubmit={async e=>{if(await act('createOrder',{...values(e),preferredProId:targetMaster?.id},'Заказ опубликован'))setCreate(false)}}><label>Коротко о задаче<input name="title" defaultValue={aiDraft?.title} placeholder="Например, заменить смеситель" minLength={5} maxLength={120} required/></label>{targetMaster&&<div className="usta-panel"><strong>Заказ для мастера: {targetMaster.name}</strong><p>Предложение увидит только выбранный мастер. Цена согласуется после его отклика.</p><button type="button" className="usta-text-button" onClick={()=>setTargetMaster(null)}>Сделать заказ общим</button></div>}<label>Категория<select name="category" defaultValue={targetMaster?.category||aiDraft?.category||categories[0]}>{categories.map(c=><option key={c}>{c}</option>)}</select></label><label>Подробности<textarea name="description" defaultValue={aiDraft?.description} placeholder="Что случилось и какой результат нужен?" minLength={10} maxLength={4000} required/></label><div className="usta-two-fields"><label>Город<input name="city" defaultValue={aiDraft?.city||user.city} minLength={2} maxLength={80} required/></label><label>Бюджет, сум<input name="budget" type="number" min={1000} max={100000000} step={1} placeholder="150000" required/></label></div><label>Адрес<input name="address" minLength={5} maxLength={300} required placeholder="Улица, дом, квартира"/><small>Точный адрес увидит только выбранный мастер.</small></label><ServiceFields initial={aiDraft?.serviceCode}/><LocationPicker initialCenter={user.location}/><button className="usta-button" disabled={pending}>Опубликовать заказ <ArrowUpRight size={18}/></button></form></section></div>}
+    {current&&user&&<div className="usta-backdrop"><section className="usta-modal wide" role="dialog" aria-modal="true" aria-labelledby="order-title"><button className="usta-close" onClick={()=>setSelected(null)} aria-label="Закрыть">×</button><span className={`usta-status ${current.status}`}>{statusNames[current.status]}</span><h2 id="order-title">{current.title}</h2><p className="usta-detail-description">{current.description}</p><div className="usta-detail-meta"><span><MapPin size={15}/>{current.city}{current.address?`, ${current.address}`:''}</span><strong>{price(current.agreed_price||current.budget)}</strong></div>
+      {current.status==='open'&&user.role==='pro'&&!current.offers.length&&<form className="usta-form usta-panel" onSubmit={e=>act('offer',{...values(e),orderId:current.id},'Предложение отправлено')}><h3>Предложите свои условия</h3><label>Стоимость, сум<input name="price" type="number" min={1000} max={100000000} required defaultValue={current.budget}/></label><label>Когда готовы и что входит в цену<textarea name="note" minLength={5} maxLength={1000} required/></label><button disabled={pending} className="usta-button">Отправить предложение <Send size={16}/></button></form>}
+      {!!current.offers.length&&<div className="usta-offers"><h3>Предложения</h3>{current.offers.map(o=><div key={o.id} className="usta-offer"><div><strong>{o.pro_name}</strong><p>{o.note}</p><b>{price(o.price)}</b></div>{current.client_id===user.id&&current.status==='open'&&<button disabled={pending} className="usta-button small" onClick={()=>act('accept',{orderId:current.id,offerId:o.id},'Мастер выбран. Цена согласована.')}>Выбрать</button>}{current.pro_id===o.pro_id&&<CheckCircle size={20}/>}</div>)}</div>}
+      <div className="usta-order-actions">{current.pro_id===user.id&&current.status==='assigned'&&<button disabled={pending} className="usta-button" onClick={()=>act('transition',{orderId:current.id,status:'in_progress'},'Работа начата')}>Начать работу</button>}{current.pro_id===user.id&&current.status==='in_progress'&&<button disabled={pending} className="usta-button" onClick={()=>act('transition',{orderId:current.id,status:'awaiting_confirmation'},'Клиенту предложено подтвердить результат')}>Работа выполнена</button>}{current.client_id===user.id&&current.status==='awaiting_confirmation'&&<button disabled={pending} className="usta-button" onClick={()=>act('transition',{orderId:current.id,status:'completed'},'Выполнение подтверждено')}>Подтвердить результат <CheckCircle size={17}/></button>}{current.client_id===user.id&&['open','assigned'].includes(current.status)&&<button disabled={pending} className="usta-text-button" onClick={()=>{if(window.confirm('Отменить этот заказ?'))act('transition',{orderId:current.id,status:'cancelled'},'Заказ отменён')}}>Отменить заказ</button>}</div>
+      {current.pro_id&&(current.pro_id===user.id||current.client_id===user.id)&&<div className="usta-chat"><h3>Переписка по заказу</h3><div className="usta-messages">{!current.messages.length&&<p>Здесь можно обсудить время и детали работы.</p>}{current.messages.map(m=><div className={`usta-message ${m.user_id===user.id?'mine':''}`} key={m.id}><strong>{m.name}</strong><p>{m.body}</p><small>{date(m.created_at)}</small></div>)}</div>{!['completed','cancelled'].includes(current.status)&&<form className="usta-chat-form" onSubmit={async e=>{const form=e.currentTarget;const data=values(e);if(await act('message',{...data,orderId:current.id},'Сообщение отправлено'))form.reset()}}><input name="body" aria-label="Сообщение" maxLength={2000} placeholder="Напишите сообщение…" required/><button className="usta-button small" disabled={pending} aria-label="Отправить сообщение"><Send size={18}/></button></form>}</div>}
+      {current.status==='completed'&&current.client_id===user.id&&!current.review&&<form className="usta-form usta-panel" onSubmit={e=>act('review',{...values(e),orderId:current.id},'Спасибо за отзыв!')}><h3>Как прошла работа?</h3><label>Оценка<select name="rating" defaultValue="5">{[5,4,3,2,1].map(n=><option key={n} value={n}>{n} из 5</option>)}</select></label><label>Отзыв<textarea name="body" minLength={3} maxLength={1000} required/></label><button disabled={pending} className="usta-button">Оставить отзыв <Star size={17}/></button></form>}{current.review&&<div className="usta-panel"><h3>Отзыв клиента · {current.review.rating}/5 ★</h3><p>{current.review.body}</p></div>}
+      <details className="usta-history"><summary>Проверить ориентир цены</summary><PriceInsight key={current.id} city={current.city} initialService={current.service_code||"other"} initialBasis={current.price_basis||"labor"} initialQuantity={current.quantity||1} initialQuote={String(current.agreed_price||current.budget)}/></details>
+      {!!current.events.length&&<details className="usta-history"><summary><Clock size={15}/> История заказа</summary>{current.events.map((e,i)=><p key={i}>{date(e.created_at)} · {e.action.startsWith('Статус: ')?statusNames[e.action.slice(8)]:e.action}</p>)}</details>}
+    </section></div>}
+  </div>
 }

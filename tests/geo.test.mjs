@@ -1,0 +1,82 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync,rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { distanceKm,publicLocation,readLocation } from '../lib/geo.mjs';
+import { createMarketplace } from '../lib/marketplace.mjs';
+const position={latitude:41.311117,longitude:69.279718};
+const register=(s,id,role='pro')=>s.register({email:`${id}@map.test`,name:`Map ${id}`,password:'map-test-password',role,city:'Ташкент',specialty:'Сантехника'});
+const order={title:'Тестовая заявка карты',description:'Тестовая задача для проверки геопоиска',category:'Сантехника',city:'Ташкент',address:'Закрытый адрес клиента',budget:100000,...position};
+test('coordinates validate and distance respects zero, antimeridian and known separation',()=>{
+ assert.equal(readLocation('',''),null);
+ assert.deepEqual(readLocation('0','0'),{latitude:0,longitude:0});
+ for(const [lat,lng] of [[null,1],[1,''],[NaN,0],[91,0],[0,181],[{},1],[true,1],[' ',1]])assert.throws(()=>readLocation(lat,lng));
+ assert.equal(distanceKm(position,position),0);
+ assert.ok(Math.abs(distanceKm({latitude:0,longitude:0},{latitude:0,longitude:1})-111.195)<.01);
+ assert.ok(distanceKm({latitude:0,longitude:179.9},{latitude:0,longitude:-179.9})<23);
+ assert.deepEqual(publicLocation(position.latitude,position.longitude),{latitude:41.31,longitude:69.28,approximate:true});
+});
+test('nearby masters require opt-in, sort by approximate distance, filter, hide blocked users and persist',()=>{
+ const folder=mkdtempSync(join(tmpdir(),'usta-map-'));
+ const path=join(folder,'map.sqlite');
+ let s=createMarketplace(path);
+ try{
+  const {user:client}=register(s,'client','client');
+  const {user:near,token}=register(s,'near');
+  const {user:far}=register(s,'far');
+  const {user:hidden}=register(s,'hidden');
+  s.mutate(near,'mapLocation',{...position,visible:true});
+  s.mutate(far,'mapLocation',{latitude:41.38,longitude:69.31,visible:true});
+  s.mutate(hidden,'mapLocation',{...position,visible:false});
+  assert.throws(()=>s.mutate(client,'mapLocation',{...position,visible:true}),/через свои заявки/);
+  assert.throws(()=>s.mutate(near,'mapLocation',{latitude:null,longitude:null,visible:true}),/Выберите/);
+  assert.throws(()=>s.nearby(null,{...position}),/Войдите/);
+  assert.throws(()=>s.nearby(client,{...position,radius:1000}),/Радиус/);
+  let results=s.nearby(client,{...position,radius:10});
+  assert.deepEqual(results.items.map(i=>i.id),[near.id,far.id]);
+  assert.ok(results.items[0].distanceKm<results.items[1].distanceKm);
+  assert.equal(results.items[0].location.latitude,41.31);
+  assert.ok(!('email' in results.items[0])&&!('latitude' in results.items[0]));
+  assert.equal(s.nearby(client,{...position,radius:1}).items.length,1);
+  assert.equal(s.nearby(client,{...position,radius:10,category:'Электрика'}).items.length,0);
+  s.close();s=createMarketplace(path);
+  assert.deepEqual(s.authenticate(token).location,position);
+  assert.equal(s.authenticate(token).mapVisible,true);
+  s.moderate('blockUser',{id:near.id,reason:'Тест блокировки профиля карты'});
+  assert.equal(s.nearby(client,{...position,radius:1}).items.length,0);
+  s.mutate(far,'mapLocation',{latitude:null,longitude:null,visible:false});
+  assert.equal(s.nearby(client,{...position,radius:100}).items.length,0);
+ }finally{s.close();rmSync(folder,{recursive:true,force:true})}
+});
+test('map exposes only approximate open jobs; invitations are private and remain actionable',()=>{
+ const s=createMarketplace(':memory:');
+ try{
+  const client=register(s,'client','client').user;
+  const otherClient=register(s,'other-client','client').user;
+  const pro=register(s,'pro').user;
+  const stranger=register(s,'stranger').user;
+  const {id}=s.mutate(client,'createOrder',order);
+  const invite=s.mutate(client,'createOrder',{...order,preferredProId:pro.id}).id;
+  s.mutate(client,'createOrder',{...order,latitude:'',longitude:''});
+  const result=s.nearby(pro,{...position,radius:5});
+  assert.equal(result.items.length,2);
+  assert.ok(result.items.every(i=>i.location.latitude===41.31&&!('address' in i)&&!('client_id' in i)&&!('longitude' in i)));
+  assert.equal(s.nearby(stranger,{...position,radius:5}).items.length,1);
+  assert.ok(!s.state(stranger).orders.some(o=>o.id===invite));
+  assert.throws(()=>s.mutate(stranger,'offer',{orderId:invite,price:90000,note:'Чужое предложение'}),/недоступен/);
+  const listed=s.state(pro).orders.find(o=>o.id===id);
+  assert.equal(listed.address,null);
+  assert.equal(listed.location.latitude,41.31);
+  assert.ok(!('latitude' in listed));
+  assert.equal(s.state(otherClient).orders.length,0);
+  assert.deepEqual(s.state(client).orders.find(o=>o.id===id).location,position);
+  s.mutate(pro,'offer',{orderId:invite,price:90000,note:'Приглашение принято, цена 90000'});
+  const offer=s.state(client).orders.find(o=>o.id===invite).offers[0];
+  s.mutate(client,'accept',{orderId:invite,offerId:offer.id});
+  assert.deepEqual(s.state(pro).orders.find(o=>o.id===invite).location,position);
+  assert.equal(s.nearby(pro,{...position,radius:5}).items.length,1);
+  s.mutate(client,'transition',{orderId:id,status:'cancelled'});
+  assert.equal(s.nearby(pro,{...position,radius:5}).items.length,0);
+ }finally{s.close()}
+});
